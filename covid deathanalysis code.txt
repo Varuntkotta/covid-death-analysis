@@ -1,0 +1,439 @@
+SQL code
+SELECT COVID_19_deaths1.*,
+age.Allusualresidentsmeasures,
+age.Age90andovermeasures,
+age.Age8to9measures,
+age.Age85to89measures,
+age.Age75to84measures,
+age.Age65to74measures,
+age.Age60to64measures,
+age.Age5to7measures,
+age.Age45to59measures,
+age.Age30to44measures,
+age.Age25to29measures,
+age.Age20to24measures,
+age.Age18to19measures,
+age.Age16to17measures,
+age.Age15measures,
+age.Age10to14measures,
+age.Age0to4measures,
+health.Allcategories,
+health.Badhealthmeasures,
+health.Fairhealthmeasures,
+health.Goodhealthmeasures,
+health.Verybadhealthmeasures,
+health.Verygoodhealthmeasures,
+sex.Sex_Allpersonsmeasures,
+sex.Sex_Femalesmeasures,
+sex.Sex_Malesmeasures,
+population_density.Allusualresidentsmeasures,
+population_density.AreaHectaresmeasures,
+population_density.Density_numberofpersonsperhectare_measures,
+economicactivity.EA_Allusualresidentsaged16to74measures,
+economicactivity.EA_EconomicallyInactivemeasures,
+economicactivity.EA_Economicallyactive_Employee_Full_timemeasures,
+economicactivity.EA_EconomicallyactiveEmployee_Part_timemeasures,
+economicactivity.EA_Economicallyactive_Full_timestudentmeasures,
+economicactivity.EA_Economicallyactive_Inemploymentmeasures,
+economicactivity.EA_Economicallyactive_Self_employedmeasures,
+economicactivity.EA_Economicallyactive_Unemployedmeasures,
+economicactivity.EA_Economicallyactivemeasures,
+economicactivity.EA_Economicallyinactive_Lookingafterhomeorfamilymeasures,
+economicactivity.EA_Economicallyinactive_Othermeasures,
+economicactivity.EA_Economicallyinactive_Retiredmeasures,
+economicactivity.EA_Economicallyinactive_Long_termsickordisabledmeasures,
+economicactivity.EA_Economicallyinactive_Studentincludingfull_timestudentsmeasures,
+economicactivity.EA_Long_termunemployedmeasures,
+economicactivity.EA_Unemployed_Age16to24measures,
+economicactivity.EA_Unemployed_Age50to74measures,
+economicactivity.EA_Unemployed_Neverworkedmeasures
+
+FROM COVID_19_deaths1
+LEFT JOIN
+age ON COVID_19_deaths1.LA_code=age.geographycode 
+LEFT JOIN
+health ON COVID_19_deaths1.LA_code = health.geographycode
+LEFT JOIN
+population_density ON COVID_19_deaths1.LA_code = population_density.geographycode
+
+LEFT JOIN
+sex ON COVID_19_deaths1.LA_code = sex.geographycode
+LEFT JOIN
+economicactivity ON COVID_19_deaths1.LA_code=economicactivity.geographycode;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+R code
+
+# read in data from csv file
+covid_death <- read.csv("u2247657_DS7006_CW2_data.csv.csv", stringsAsFactors = FALSE)
+head(covid_death)
+str(covid_death)
+
+#Dimension of dataset
+dim(covid_death)
+
+#Summary of dataset
+summary(covid_death)
+library(psych)
+describe(covid_data_final)
+
+#Find missing values
+is.na(covid_death)
+covid_death_eliminate<-na.omit(covid_death)
+#Data preparation
+# removing the LA code  LA name and monthly covid death data
+covid_data <- covid_death_eliminate[,-c(1:16)]
+#eliminate the sum  values and taking the important economic measures only 
+covid_data1 <- covid_data[,-c(7:22)]
+covid_data_final <- covid_data1[,-c(7,13,16,17,19,21,22,23,24,25,26,28,29,30,31,32,34,35,36)]
+
+
+#Converting into per 1000
+for (i in 1:nrow(covid_data_final)){
+  sum_of_sex_all <- covid_data_final$Allusualresidentsmeasures[i]
+  covid_data_final[i,] <- covid_data_final[i,]/sum_of_sex_all*1000
+}
+
+#Descriptive Statistics of Variables
+library(psych)
+describe(covid_data_final)
+plot(covid_data_final)
+covid_data_final1 <- covid_data_final[,-c(2)]
+#Histogram of Dependent Variable
+hist(covid_data_final1$Total,col = "light blue", border = "dark blue",
+     xlab = "Death", main = "Histogram of Covid Death Variable")
+
+#Box Plot of Dependent Variable
+boxplot(covid_data_final1,xlab = "Variables",col="yellow")
+
+#Box plot of all sub variables
+#Age
+boxplot(covid_data_final1$Age.below.18,
+        covid_data_final1$Age.btwn18.and.30,
+        covid_data_final1$Age.btwn30.and60,
+        covid_data_final1$Age.above.60,
+        names = c("Age_below18","Age btwn 18 and 30","Age btwn 30 and 60","Age above 60"),
+        xlab = "AGE")
+#Sex
+boxplot(covid_data_final1$Sex_Femalesmeasures,
+        covid_data_final1$Sex_Malesmeasures,
+        names = c("Sex_Males","Sex_Females"),
+        xlab = "Sex")
+#HEALTH mEASURES
+boxplot(covid_data_final1$Badhealthmeasures,
+        covid_data_final1$Fairhealthmeasures, 
+        covid_data_final1$Goodhealthmeasures,
+        covid_data_final1$Verybadhealthmeasures,
+        covid_data_final1$Verygoodhealthmeasures,
+        names = c("BAD HEALTH","FAIR HEALTH","GOOD HEALTH","VERY BAD HEALTH","VERY GOOD HEALTH"),
+        xlab = "HEALTH MEASURES")
+#ECONOMIC MEASURES
+boxplot(covid_data_final1$EA_EconomicallyInactivemeasures,
+        covid_data_final1$EA_Economicallyactivemeasures,
+        covid_data_final1$EA_Long_termunemployedmeasures,
+        
+        names = c("INACTIVE","ACTIVE","LONG TERM UNEMPLOYED"),
+        xlab = "ECONOMIC MEASURES")
+#DENSITY OF POPULATION
+boxplot(covid_data_final1$Density_numberofpersonsperhectare_measures,
+        
+        names = c("NUMBER OF PERSON PER HECTARE"),
+        xlab = "DENSITY OF POPULATION")
+
+
+  #Normalize using MinMax
+covid_data_final_mm <-as.data.frame(apply(covid_data_final1, MARGIN = 2, FUN = function(x) (x - min(x))/diff(range(x))))
+boxplot(covid_data_final_mm)
+
+#Normalize using Z-Score
+covid_data_final_z1 <-as.data.frame(apply(covid_data_final1, MARGIN = 2, FUN = function(x) (x - mean(x))/sd(x)))
+boxplot(covid_data_final_z1)
+covid_data_final_z2 <-as.data.frame(apply(covid_data_final1, MARGIN = 2, FUN = function(x) (x - mean(x))/(2*sd(x))))
+boxplot(covid_data_final_z2)
+
+#Normalize using SoftMax
+library(DMwR2)
+covid_data_final_sm1 <-as.data.frame(apply(covid_data_final1, MARGIN = 2, FUN = function(x) (SoftMax(x,lambda = 1, mean(x), sd(x)))))
+boxplot(covid_data_final_sm1)
+covid_data_final_sm2 <-as.data.frame(apply(covid_data_final1, MARGIN = 2, FUN = function(x) (SoftMax(x,lambda = 2, mean(x), sd(x)))))
+boxplot(covid_data_final_sm2)
+
+
+#Correlation Matrix
+covid_data_final_z_cor <- cor(covid_data_final_z2, use = "pairwise.complete.obs", method = "spearman")
+round(covid_data_final_z_cor, digits = 2)
+covid_data_final_z_cor_df <- as.data.frame(covid_data_final_z_cor)
+View(round(covid_data_final_z_cor, digits = 2))
+library(corrgram)
+corrgram(covid_data_final_z2, order=FALSE, cor.method = "pearson", lower.panel=panel.conf,
+         upper.panel=panel.pie, text.panel=panel.txt, main="Covid Death Ecomomic and Social Variables Correlation")
+
+#Select the subset after checking the correlation matrix
+#removing the low correlated variables
+covid_data_final_to_all <- covid_data_final_z2[c("Total",
+                                                 "Age.below.18",
+                                                 "Badhealthmeasures",
+                                                 "Fairhealthmeasures",
+                                                 "Verybadhealthmeasures",
+                                                 "Sex_Femalesmeasures",
+                                                 "EA_EconomicallyInactivemeasures",
+                                                 "EA_Long_termunemployedmeasures")]
+                                                 
+                                          
+      
+                          
+covid_data_final_to_independent <- covid_data_final_z2[c("Age.below.18",
+                                                         "Badhealthmeasures",
+                                                         "Fairhealthmeasures",
+                                                         "Verybadhealthmeasures",
+                                                         "Sex_Femalesmeasures",
+                                                         "EA_EconomicallyInactivemeasures",
+                                                         "EA_Long_termunemployedmeasures")]
+
+
+#Correlation between dependent and independent variables
+cor(covid_data_final_to_all,use = "pairwise.complete.obs", method = "spearman")
+corrgram(covid_data_final_to_all, order=FALSE, cor.method = "pearson", lower.panel=panel.conf,
+         upper.panel=panel.pie, text.panel=panel.txt, main="Correlation between Covid Death and social factors")
+
+#Correlation between dependent and independent with p-value
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$Age.below.18, method = "pearson")
+
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$Badhealthmeasures, method = "pearson")
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$Fairhealthmeasures, method = "pearson")
+
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$Verybadhealthmeasures, method = "pearson")
+
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$Sex_Femalesmeasures, method = "pearson")
+
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$EA_EconomicallyInactivemeasures, method = "pearson")
+
+cor.test(covid_data_final_to_all$Total, covid_data_final_to_all$EA_Long_termunemployedmeasures, method = "pearson")
+#Internal Correlation between independent variables
+covid_data_final_to_independent_inter_corr <- cor(covid_data_final_to_independent,use = "pairwise.complete.obs", method = "spearman")
+round(covid_data_final_to_independent_inter_corr, digits = 2)
+corrgram(covid_data_final_to_independent, order=FALSE, cor.method = "pearson", lower.panel=panel.conf,
+         upper.panel=panel.pie, text.panel=panel.txt, main="Internal Correlation between social factors")
+
+#Partial Correlation between Independent variables
+library(ppcor)
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$Age.below.18, covid_data_final_to_all$Badhealthmeasures, method = "pearson")
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$Badhealthmeasures, covid_data_final_to_all$Fairhealthmeasures, method = "pearson")
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$Verybadhealthmeasures, covid_data_final_to_all$Fairhealthmeasures, method = "pearson")
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$Sex_Femalesmeasures, covid_data_final_to_all$Age.below.18, method = "pearson")
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$EA_EconomicallyInactivemeasures, covid_data_final_to_all$EA_Long_termunemployedmeasures, method = "pearson")
+pcor.test(covid_data_final_to_all$Total,covid_data_final_to_all$Sex_Femalesmeasures, covid_data_final_to_all$EA_EconomicallyInactivemeasures, method = "pearson")
+pcor(covid_data_final_to_independent)
+#ks test
+ks.test(covid_data_final_to_all$Age.below.18,"pnorm", mean(covid_data_final_to_all$Age.below.18), 
+        sd(covid_data_final_to_all$Age.below.18))
+ks.test(covid_data_final_to_all$Badhealthmeasures,"pnorm", mean(covid_data_final_to_all$Badhealthmeasures), 
+        sd(covid_data_final_to_all$Badhealthmeasures))
+ks.test(covid_data_final_to_all$Fairhealthmeasures,"pnorm", mean(covid_data_final_to_all$Fairhealthmeasures), 
+        sd(covid_data_final_to_all$Fairhealthmeasures))
+ks.test(covid_data_final_to_all$Verybadhealthmeasures,"pnorm", mean(covid_data_final_to_all$Verybadhealthmeasures), 
+        sd(covid_data_final_to_all$Verybadhealthmeasures))
+ks.test(covid_data_final_to_all$Sex_Femalesmeasures,"pnorm", mean(covid_data_final_to_all$Sex_Femalesmeasures), 
+        sd(covid_data_final_to_all$Sex_Femalesmeasures))
+ks.test(covid_data_final_to_all$EA_EconomicallyInactivemeasures,"pnorm", mean(covid_data_final_to_all$EA_EconomicallyInactivemeasures), 
+        sd(covid_data_final_to_all$EA_EconomicallyInactivemeasures))
+ks.test(covid_data_final_to_all$EA_Long_termunemployedmeasures,"pnorm", mean(covid_data_final_to_all$EA_Long_termunemployedmeasures), 
+        sd(covid_data_final_to_all$EA_Long_termunemployedmeasures))
+#Adding categorical variable
+above.avg <- covid_data_final_to_all$Total > mean(covid_data_final_to_all$Total)
+covid_data_final_to_all$avg_above_below[above.avg] <- "1"
+covid_data_final_to_all$avg_above_below[!above.avg] <- "0"
+head(covid_data_final_to_all)
+
+#Anova Test
+aov_agebelow18 <- aov(covid_data_final_to_all$Age.below.18~ covid_data_final_to_all$avg_above_below,data =covid_data_final_to_all)
+summary(aov_agebelow18)
+TukeyHSD(aov_agebelow18)
+
+aov_badhealthmeasures <- aov(covid_data_final_to_all$Badhealthmeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_badhealthmeasures)
+TukeyHSD(aov_badhealthmeasures)
+
+aov_sex_femalemeasures <- aov(covid_data_final_to_all$Sex_Femalesmeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_sex_femalemeasures)
+TukeyHSD(aov_sex_femalemeasures)
+
+aov_fairhealthmeasures <- aov(covid_data_final_to_all$Fairhealthmeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_fairhealthmeasures)
+TukeyHSD(aov_fairhealthmeasures)
+aov_verybadhealthmeasures <- aov(covid_data_final_to_all$Verybadhealthmeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_verybadhealthmeasures)
+TukeyHSD(aov_verybadhealthmeasures)
+
+aov_EA_EconomicallyInactivemeasures <- aov(covid_data_final_to_all$EA_EconomicallyInactivemeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_EA_EconomicallyInactivemeasures)
+TukeyHSD(aov_EA_EconomicallyInactivemeasures)
+
+aov_EA_Long_termunemployedmeasures <- aov(covid_data_final_to_all$EA_Long_termunemployedmeasures~ covid_data_final_to_all$avg_above_below)
+summary(aov_EA_Long_termunemployedmeasures)
+TukeyHSD(aov_EA_Long_termunemployedmeasures)
+
+library(psych)
+#Kaiser-Meyer-Olkin Factor Adequacy
+KMO(cor(covid_data_final_to_independent))
+library(nFactors)
+covid_data_final_to_independent_ev <- eigen(cor(covid_data_final_to_independent))
+covid_data_final_to_independent_ev$values
+plot(covid_data_final_to_independent_ev$values, type="b", col="blue", xlab="variables")
+
+
+# Calculate Cumulative Proportion of Eigenvalue and plot
+covid_data_final_to_independent_ev.sum<-0 
+for(i in 1:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.sum<-covid_data_final_to_independent_ev.sum+covid_data_final_to_independent_ev$value[i]
+}
+covid_data_final_to_independent_ev.list1<-1:length(covid_data_final_to_independent_ev$value)
+for(i in 1:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.list1[i]=covid_data_final_to_independent_ev$value[i]/covid_data_final_to_independent_ev.sum
+}
+covid_data_final_to_independent_ev.list2<-1:length(covid_data_final_to_independent_ev$value)
+covid_data_final_to_independent_ev.list2[1]<-covid_data_final_to_independent_ev.list1[1]
+for(i in 2:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.list2[i]=covid_data_final_to_independent_ev.list2[i-1]+covid_data_final_to_independent_ev.list1[i]
+}
+plot (covid_data_final_to_independent_ev.list2, type="b", col="red", xlab="number of components", ylab ="cumulative proportion")
+
+
+
+# VariMax Rotated Principal Components
+library(GPArotation)
+
+# principal() uses a data frame or matrix of correlations
+fit <- principal(covid_data_final_to_independent, nfactors=4, rotate="varimax")
+fit
+
+# Weed out further variables after first factor analysis
+covid_data_final_to_independent_vars <- names(covid_data_final_to_independent) %in% c("Verybadhealthmeasures","EA_EconomicallyInactivemeasures")
+covid_data_final_to_independent <- covid_data_final_to_independent[!covid_data_final_to_independent_vars]
+str(covid_data_final_to_independent)
+
+# get eigenvalues
+covid_data_final_to_independent_ev <- eigen(cor(covid_data_final_to_independent))
+covid_data_final_to_independent_ev$values
+# plot a scree plot of eigenvalues
+plot(covid_data_final_to_independent_ev$values, type="b", col="blue", xlab="variables")
+
+# calculate cumulative proportion of eigenvalue and plot
+covid_data_final_to_independent_ev.sum<-0
+for(i in 1:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.sum<-covid_data_final_to_independent_ev.sum+covid_data_final_to_independent_ev$value[i]
+}
+covid_data_final_to_independent_ev.list1<-1:length(covid_data_final_to_independent_ev$value)
+for(i in 1:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.list1[i]=covid_data_final_to_independent_ev$value[i]/covid_data_final_to_independent_ev.sum
+}
+covid_data_final_to_independent_ev.list2<-1:length(covid_data_final_to_independent_ev$value)
+covid_data_final_to_independent_ev.list2[1]<-covid_data_final_to_independent_ev.list1[1]
+for(i in 2:length(covid_data_final_to_independent_ev$value)){
+  covid_data_final_to_independent_ev.list2[i]=covid_data_final_to_independent_ev.list2[i-1]+covid_data_final_to_independent_ev.list1[i]
+}
+plot (covid_data_final_to_independent_ev.list2, type="b", col="red", xlab="number of components", ylab ="cumulative proportion")
+
+7# Varimax Rotated Principal Components
+# retaining 'nFactors' components
+fit <- principal(covid_data_final_to_independent, nfactors=4, rotate="varimax")
+fit
+
+
+
+boxplot(covid_data_final_to_independent)
+
+
+
+#Clustering Hierarchical
+
+covid_data_final_to_independent_d <- dist(covid_data_final_to_independent, method = "euclidean") # distance matrix
+set.seed(12345)
+covid_data_final_to_independent_d_fit <- hclust(covid_data_final_to_independent_d, method="ward.D")
+
+# plot(fit) Display Dendogram
+plot (covid_data_final_to_independent_d_fit, labels = covid_death_eliminate$LA_name)
+groups <- cutree(covid_data_final_to_independent_d_fit, k=4) # cut tree into 4 clusters
+rect.hclust(covid_data_final_to_independent_d_fit, k=4, border="green")
+
+# Assign cluster number to Borough Name
+hierarchical_data <- data.frame(covid_death_eliminate$LA_code)
+names(hierarchical_data)[1] <- "Code"
+hierarchical_data <- within (hierarchical_data, Name <- covid_death_eliminate$LA_name)
+hierarchical_data <- within (hierarchical_data, cluster <- groups)
+hierarchical_data
+
+
+# Clustering K-Means
+set.seed(12345)
+covid_data_final_to_independent_fit <- kmeans(covid_data_final_to_independent, 4) # 4 cluster solution
+
+#Visualise clusters
+library(cluster)
+library(fpc)
+clusplot(covid_data_final_to_independent, covid_data_final_to_independent_fit$cluster)       # from library(cluster)
+plotcluster(covid_data_final_to_independent, covid_data_final_to_independent_fit$cluster)    # from library(fpc)
+
+# Get cluster means
+aggregate(covid_data_final_to_independent, by=list(covid_data_final_to_independent_fit$cluster),FUN = mean)
+
+# Assign cluster number to Borough Name
+kmeans_data <- data.frame(covid_death_eliminate$LA_code)
+names(kmeans_data)[1] <- "Code"
+kmeans_data <- within (kmeans_data, Name <- covid_death_eliminate$LA_name)
+kmeans_data <- data.frame(kmeans_data, covid_data_final_to_independent_fit$cluster)
+kmeans_data
+
+
+
+#Multiple Regression
+covid_data_final_to_regression <- covid_data_final_to_all[c("Total",
+                                                            "Age.below.18",
+                                                            "Badhealthmeasures",
+                                                            "Fairhealthmeasures",
+                                                            
+                                                            "Sex_Femalesmeasures",
+                                                           
+                                                            "EA_Long_termunemployedmeasures")]
+
+                                                            
+                                                            
+summary(covid_data_final_to_regression)                                                            
+covid_data_regression_model_1 <- lm(covid_data_final_to_regression$Total~  covid_data_final_to_all$Badhealthmeasures
+                                    
+                                    + covid_data_final_to_all$Sex_Femalesmeasures
+                                    + covid_data_final_to_all$Age.below.18
+                                     + covid_data_final_to_all$EA_Long_termunemployedmeasures)
+summary(covid_data_regression_model_1)
+library(car)
+vif(covid_data_regression_model_1)
+
+covid_data_regression_model_2 <- lm(covid_data_final_to_regression$Total ~ covid_data_final_to_all$Age.below.18
+                                    + covid_data_final_to_all$Badhealthmeasures
+                                    + covid_data_final_to_all$Sex_Femalesmeasures
+                                     )   
+summary(covid_data_regression_model_2)
+library(car)
+vif(covid_data_regression_model_2)
+
+
+#Stepwise Approach to find best model
+library(RcmdrMisc)
+covid_data_regression_model_2_stepwise <- stepwise(covid_data_regression_model_2, direction = "forward")
+summary(covid_data_regression_model_2_stepwise)
+
+#Checking significant difference between models using F test
+anova(covid_data_regression_model_1,covid_data_regression_model_2,covid_data_regression_model_2_stepwise , test = "F")
